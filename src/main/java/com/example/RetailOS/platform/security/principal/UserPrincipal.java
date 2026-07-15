@@ -17,6 +17,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Builder
 @AllArgsConstructor
 public class UserPrincipal implements UserDetails {
+    String firstName;
+    String lastName;
     UUID userId;
     UUID shopId;
     String email;
