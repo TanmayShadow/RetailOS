@@ -6,10 +6,10 @@ import lombok.Builder;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
+
 import com.example.RetailOS.platform.security.permission.Role;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 
@@ -24,11 +24,20 @@ public class UserPrincipal implements UserDetails {
     String email;
     private String password;
     Role role;
-    Collection<GrantedAuthority> authorities;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        Set<SimpleGrantedAuthority> authoritiesSet = new HashSet<>();
+        authoritiesSet.add(
+                new SimpleGrantedAuthority("ROLE_" + role.name())
+        );
+        role.getPermissions()
+             .forEach(permission ->
+                     authoritiesSet.add(
+                             new SimpleGrantedAuthority(permission.name())
+                     )
+             );
+        return authoritiesSet;
     }
 
     @Override
@@ -65,10 +74,11 @@ public class UserPrincipal implements UserDetails {
         return UserPrincipal.builder()
                 .userId(user.getId())
                 .shopId(user.getShopId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .email(user.getEmail())
                 .password(user.getPassword())
                 .role(user.getRole())
-                .authorities(Collections.emptyList()) // we'll replace later
                 .build();
     }
 
