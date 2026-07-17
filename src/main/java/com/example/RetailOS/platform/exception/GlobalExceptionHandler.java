@@ -122,7 +122,7 @@ public class GlobalExceptionHandler {
                 .errors(errors)
                 .build();
 
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(response);
     }
 
