@@ -7,6 +7,14 @@ import java.util.Set;
 @Getter
 public enum Role {
 
+    // Platform (website) administrator — not tied to any shop.
+    SUPER_ADMIN(Set.of(
+            Permission.PLAN_VIEW_ALL,
+            Permission.PLAN_CREATE,
+            Permission.PLAN_UPDATE,
+            Permission.PLAN_DELETE
+    )),
+
     OWNER(Set.of(
             Permission.PRODUCT_VIEW,
             Permission.PRODUCT_CREATE,
