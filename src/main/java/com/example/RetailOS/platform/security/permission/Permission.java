@@ -36,5 +36,11 @@ public enum Permission {
     USER_DELETE,
 
     // Reports
-    REPORT_VIEW
+    REPORT_VIEW,
+
+    // Subscription plans (platform-level)
+    PLAN_VIEW_ALL,
+    PLAN_CREATE,
+    PLAN_UPDATE,
+    PLAN_DELETE
 }
