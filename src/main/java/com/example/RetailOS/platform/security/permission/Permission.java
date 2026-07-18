@@ -42,5 +42,9 @@ public enum Permission {
     PLAN_VIEW_ALL,
     PLAN_CREATE,
     PLAN_UPDATE,
-    PLAN_DELETE
+    PLAN_DELETE,
+
+    // Shop subscriptions (platform-level oversight)
+    SUBSCRIPTION_VIEW_ALL,
+    SUBSCRIPTION_UPDATE
 }
