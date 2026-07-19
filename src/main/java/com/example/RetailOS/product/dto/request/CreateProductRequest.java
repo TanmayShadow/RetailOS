@@ -1,5 +1,6 @@
 package com.example.RetailOS.product.dto.request;
 
+import com.example.RetailOS.product.entity.ProductUnit;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
@@ -21,6 +22,11 @@ public class CreateProductRequest {
 
     @Size(max = 50)
     private String sku;
+
+    /**
+     * Optional — defaults to PIECE. Selling price is per this unit.
+     */
+    private ProductUnit unit;
 
     @NotNull
     @DecimalMin(value = "0.00")

@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -212,6 +213,13 @@ public class InvoiceService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Product not found: " + itemRequest.getProductId()));
 
+            if (!product.getUnit().isFractionalAllowed()
+                    && itemRequest.getQuantity().stripTrailingZeros().scale() > 0) {
+                throw new BadRequestException(
+                        product.getName() + " is sold per " + product.getUnit()
+                                + " — quantity must be a whole number.");
+            }
+
             BigDecimal lineTotal = itemRequest.getQuantity()
                     .multiply(product.getSellingPrice())
                     .setScale(2, RoundingMode.HALF_UP);
@@ -271,14 +279,14 @@ public class InvoiceService {
 
     private InvoiceResponse toDetailResponse(Invoice invoice, List<InvoiceItem> items) {
 
-        Map<UUID, String> productNames = productRepository
+        Map<UUID, Product> productsById = productRepository
                 .findAllById(items.stream()
                         .map(InvoiceItem::getProductId)
                         .filter(Objects::nonNull)
                         .distinct()
                         .toList())
                 .stream()
-                .collect(Collectors.toMap(Product::getId, Product::getName));
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
 
         String customerName = invoice.getCustomerId() == null
                 ? null
@@ -287,7 +295,8 @@ public class InvoiceService {
 
         return InvoiceResponse.from(invoice, customerName,
                 items.stream()
-                        .map(i -> InvoiceItemResponse.from(i, productNames.get(i.getProductId())))
+                        .map(i -> InvoiceItemResponse.from(i,
+                                i.getProductId() == null ? null : productsById.get(i.getProductId())))
                         .toList());
     }
 

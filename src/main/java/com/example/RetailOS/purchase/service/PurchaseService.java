@@ -1,9 +1,12 @@
 package com.example.RetailOS.purchase.service;
 
+import com.example.RetailOS.platform.exception.BadRequestException;
 import com.example.RetailOS.platform.exception.ResourceNotFoundException;
 import com.example.RetailOS.platform.security.service.CurrentUserService;
+import com.example.RetailOS.product.dto.request.CreateProductRequest;
 import com.example.RetailOS.product.entity.Product;
 import com.example.RetailOS.product.repository.ProductRepository;
+import com.example.RetailOS.product.service.ProductService;
 import com.example.RetailOS.purchase.dto.request.CreatePurchaseRequest;
 import com.example.RetailOS.purchase.dto.request.PurchaseItemRequest;
 import com.example.RetailOS.purchase.dto.response.PurchaseItemResponse;
@@ -27,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +40,7 @@ public class PurchaseService {
     private final PurchaseRepository purchaseRepository;
     private final PurchaseItemRepository purchaseItemRepository;
     private final ProductRepository productRepository;
+    private final ProductService productService;
     private final SupplierRepository supplierRepository;
     private final SupplierService supplierService;
     private final CurrentUserService currentUserService;
@@ -61,10 +66,8 @@ public class PurchaseService {
         List<PurchaseItem> items = new ArrayList<>();
         for (PurchaseItemRequest itemRequest : request.getItems()) {
 
-            Product product = productRepository
-                    .findByIdAndShopId(itemRequest.getProductId(), shopId)
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Product not found: " + itemRequest.getProductId()));
+            Product product = resolveProduct(shopId, itemRequest);
+            requireWholeQuantityForCountUnits(product, itemRequest.getQuantity());
 
             BigDecimal subtotal = itemRequest.getQuantity()
                     .multiply(itemRequest.getPurchasePrice())
@@ -132,6 +135,51 @@ public class PurchaseService {
 
     // ---- Helpers ----
 
+    /**
+     * Existing product (productId, optionally repricing it) or inline
+     * creation (productName + sellingPrice) — see PurchaseItemRequest.
+     */
+    private Product resolveProduct(UUID shopId, PurchaseItemRequest itemRequest) {
+
+        if (itemRequest.getProductId() != null) {
+            Product product = productRepository
+                    .findByIdAndShopId(itemRequest.getProductId(), shopId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Product not found: " + itemRequest.getProductId()));
+            if (itemRequest.getSellingPrice() != null) {
+                product.setSellingPrice(itemRequest.getSellingPrice());
+            }
+            return product;
+        }
+
+        if (itemRequest.getProductName() != null && !itemRequest.getProductName().isBlank()) {
+            if (itemRequest.getSellingPrice() == null) {
+                throw new BadRequestException(
+                        "sellingPrice is required when adding a new product from a purchase.");
+            }
+            CreateProductRequest createRequest = new CreateProductRequest();
+            createRequest.setName(itemRequest.getProductName());
+            createRequest.setSku(itemRequest.getSku());
+            createRequest.setUnit(itemRequest.getUnit());
+            createRequest.setSellingPrice(itemRequest.getSellingPrice());
+            createRequest.setCategoryId(itemRequest.getCategoryId());
+            createRequest.setCategoryName(itemRequest.getCategoryName());
+            return productService.create(createRequest);
+        }
+
+        throw new BadRequestException(
+                "Each purchase item needs either a productId or a productName.");
+    }
+
+    private void requireWholeQuantityForCountUnits(Product product, BigDecimal quantity) {
+        if (!product.getUnit().isFractionalAllowed()
+                && quantity.stripTrailingZeros().scale() > 0) {
+            throw new BadRequestException(
+                    product.getName() + " is sold per " + product.getUnit()
+                            + " — quantity must be a whole number.");
+        }
+    }
+
     private UUID resolveSupplierId(UUID shopId, UUID supplierId, String supplierName) {
         if (supplierId != null) {
             return supplierRepository.findByIdAndShopId(supplierId, shopId)
@@ -153,10 +201,10 @@ public class PurchaseService {
 
     private PurchaseResponse toDetailResponse(Purchase purchase, List<PurchaseItem> items) {
 
-        Map<UUID, String> productNames = productRepository
+        Map<UUID, Product> productsById = productRepository
                 .findAllById(items.stream().map(PurchaseItem::getProductId).distinct().toList())
                 .stream()
-                .collect(Collectors.toMap(Product::getId, Product::getName));
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
 
         String supplierName = purchase.getSupplierId() == null
                 ? null
@@ -165,7 +213,7 @@ public class PurchaseService {
 
         return PurchaseResponse.from(purchase, supplierName,
                 items.stream()
-                        .map(i -> PurchaseItemResponse.from(i, productNames.get(i.getProductId())))
+                        .map(i -> PurchaseItemResponse.from(i, productsById.get(i.getProductId())))
                         .toList());
     }
 

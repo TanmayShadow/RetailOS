@@ -2,6 +2,7 @@ package com.example.RetailOS.product.dto.response;
 
 import com.example.RetailOS.category.entity.Category;
 import com.example.RetailOS.product.entity.Product;
+import com.example.RetailOS.product.entity.ProductUnit;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,6 +17,7 @@ public class ProductResponse {
     private UUID id;
     private String name;
     private String sku;
+    private ProductUnit unit;
     private BigDecimal sellingPrice;
     private BigDecimal currentStock;
     private UUID categoryId;
@@ -28,6 +30,7 @@ public class ProductResponse {
                 .id(product.getId())
                 .name(product.getName())
                 .sku(product.getSku())
+                .unit(product.getUnit())
                 .sellingPrice(product.getSellingPrice())
                 .currentStock(product.getCurrentStock())
                 .categoryId(product.getCategoryId())
