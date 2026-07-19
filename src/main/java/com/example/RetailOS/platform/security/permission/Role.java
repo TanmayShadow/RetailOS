@@ -12,7 +12,10 @@ public enum Role {
             Permission.PLAN_VIEW_ALL,
             Permission.PLAN_CREATE,
             Permission.PLAN_UPDATE,
-            Permission.PLAN_DELETE
+            Permission.PLAN_DELETE,
+
+            Permission.SUBSCRIPTION_VIEW_ALL,
+            Permission.SUBSCRIPTION_UPDATE
     )),
 
     OWNER(Set.of(
