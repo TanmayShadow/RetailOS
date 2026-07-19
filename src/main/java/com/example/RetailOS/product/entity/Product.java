@@ -1,0 +1,50 @@
+package com.example.RetailOS.product.entity;
+
+import com.example.RetailOS.platform.common.BaseEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(
+        name = "products",
+        indexes = {
+                @Index(name = "idx_products_shop", columnList = "shop_id"),
+                @Index(name = "idx_products_category", columnList = "category_id")
+        }
+)
+public class Product extends BaseEntity {
+
+    @Column(name = "shop_id", nullable = false)
+    private UUID shopId;
+
+    @Column(name = "category_id")
+    private UUID categoryId;
+
+    @Column(nullable = false, length = 150)
+    private String name;
+
+    @Column(length = 50)
+    private String sku;
+
+    @Column(name = "selling_price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal sellingPrice;
+
+    /**
+     * Maintained by the purchase/billing flows (DB triggers in the target
+     * schema) — never written from product create/update requests.
+     */
+    @Column(name = "current_stock", nullable = false, precision = 12, scale = 3)
+    @Builder.Default
+    private BigDecimal currentStock = BigDecimal.ZERO;
+}
