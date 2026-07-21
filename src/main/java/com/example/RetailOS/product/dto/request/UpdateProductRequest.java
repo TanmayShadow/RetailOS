@@ -1,5 +1,6 @@
 package com.example.RetailOS.product.dto.request;
 
+import com.example.RetailOS.product.entity.ProductUnit;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Size;
@@ -23,6 +24,8 @@ public class UpdateProductRequest {
 
     @Size(max = 50)
     private String sku;
+
+    private ProductUnit unit;
 
     @DecimalMin(value = "0.00")
     @Digits(integer = 8, fraction = 2)

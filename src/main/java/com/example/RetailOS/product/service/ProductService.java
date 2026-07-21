@@ -10,6 +10,7 @@ import com.example.RetailOS.product.dto.request.CreateProductRequest;
 import com.example.RetailOS.product.dto.request.UpdateProductRequest;
 import com.example.RetailOS.product.dto.response.ProductResponse;
 import com.example.RetailOS.product.entity.Product;
+import com.example.RetailOS.product.entity.ProductUnit;
 import com.example.RetailOS.product.repository.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,15 @@ public class ProductService {
 
     @Transactional
     public ProductResponse createProduct(CreateProductRequest request) {
+        return toResponse(create(request));
+    }
+
+    /**
+     * Entity-returning create, shared with flows that add products inline
+     * (e.g. recording a purchase for a not-yet-registered product).
+     */
+    @Transactional
+    public Product create(CreateProductRequest request) {
 
         UUID shopId = currentUserService.getCurrentShopId();
 
@@ -49,10 +59,11 @@ public class ProductService {
                 .categoryId(categoryId)
                 .name(request.getName().trim())
                 .sku(sku)
+                .unit(request.getUnit() == null ? ProductUnit.PIECE : request.getUnit())
                 .sellingPrice(request.getSellingPrice())
                 .build();
 
-        return toResponse(productRepository.save(product));
+        return productRepository.save(product);
     }
 
     public ProductResponse getProduct(UUID id) {
@@ -97,6 +108,9 @@ public class ProductService {
         }
         if (request.getName() != null) {
             product.setName(request.getName().trim());
+        }
+        if (request.getUnit() != null) {
+            product.setUnit(request.getUnit());
         }
         if (request.getSellingPrice() != null) {
             product.setSellingPrice(request.getSellingPrice());

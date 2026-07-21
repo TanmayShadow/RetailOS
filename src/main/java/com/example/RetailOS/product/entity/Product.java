@@ -3,6 +3,8 @@ package com.example.RetailOS.product.entity;
 import com.example.RetailOS.platform.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.*;
@@ -36,6 +38,14 @@ public class Product extends BaseEntity {
 
     @Column(length = 50)
     private String sku;
+
+    /**
+     * The selling price is per this unit (e.g. per PIECE, per KG).
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "unit_type", nullable = false, length = 10)
+    @Builder.Default
+    private ProductUnit unit = ProductUnit.PIECE;
 
     @Column(name = "selling_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal sellingPrice;
