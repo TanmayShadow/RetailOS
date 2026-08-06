@@ -20,6 +20,7 @@ public class ProductResponse {
     private ProductUnit unit;
     private BigDecimal sellingPrice;
     private BigDecimal currentStock;
+    private BigDecimal minStock;
     private UUID categoryId;
     private String categoryName;
     private Instant createdAt;
@@ -33,6 +34,7 @@ public class ProductResponse {
                 .unit(product.getUnit())
                 .sellingPrice(product.getSellingPrice())
                 .currentStock(product.getCurrentStock())
+                .minStock(product.getMinStock())
                 .categoryId(product.getCategoryId())
                 .categoryName(category == null ? null : category.getName())
                 .createdAt(product.getCreatedAt())

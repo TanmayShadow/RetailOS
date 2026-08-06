@@ -34,6 +34,13 @@ public class CreateProductRequest {
     private BigDecimal sellingPrice;
 
     /**
+     * Low-stock alert threshold. Optional — defaults to 0 (no alert).
+     */
+    @DecimalMin(value = "0.00")
+    @Digits(integer = 9, fraction = 3)
+    private BigDecimal minStock;
+
+    /**
      * Either reference an existing category by id, or give a name to
      * find-or-create one. If both are set, categoryId wins.
      */

@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,6 +62,7 @@ public class ProductService {
                 .sku(sku)
                 .unit(request.getUnit() == null ? ProductUnit.PIECE : request.getUnit())
                 .sellingPrice(request.getSellingPrice())
+                .minStock(request.getMinStock() == null ? BigDecimal.ZERO : request.getMinStock())
                 .build();
 
         return productRepository.save(product);
@@ -114,6 +116,9 @@ public class ProductService {
         }
         if (request.getSellingPrice() != null) {
             product.setSellingPrice(request.getSellingPrice());
+        }
+        if (request.getMinStock() != null) {
+            product.setMinStock(request.getMinStock());
         }
 
         if (Boolean.TRUE.equals(request.getRemoveCategory())) {

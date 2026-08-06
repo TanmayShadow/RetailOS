@@ -31,6 +31,10 @@ public class UpdateProductRequest {
     @Digits(integer = 8, fraction = 2)
     private BigDecimal sellingPrice;
 
+    @DecimalMin(value = "0.00")
+    @Digits(integer = 9, fraction = 3)
+    private BigDecimal minStock;
+
     private UUID categoryId;
 
     @Size(max = 100)
