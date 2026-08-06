@@ -57,4 +57,12 @@ public class Product extends BaseEntity {
     @Column(name = "current_stock", nullable = false, precision = 12, scale = 3)
     @Builder.Default
     private BigDecimal currentStock = BigDecimal.ZERO;
+
+    /**
+     * Low-stock alert threshold. Zero (the default) means no alert is
+     * raised for this product regardless of current stock.
+     */
+    @Column(name = "min_stock", nullable = false, precision = 12, scale = 3)
+    @Builder.Default
+    private BigDecimal minStock = BigDecimal.ZERO;
 }
