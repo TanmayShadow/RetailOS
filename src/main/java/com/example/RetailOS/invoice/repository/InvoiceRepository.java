@@ -2,7 +2,6 @@ package com.example.RetailOS.invoice.repository;
 
 import com.example.RetailOS.invoice.entity.Invoice;
 import com.example.RetailOS.invoice.entity.InvoiceStatus;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.Instant;
@@ -17,11 +16,9 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     List<Invoice> findAllByShopIdAndStatusOrderByCreatedAtDesc(UUID shopId, InvoiceStatus status);
 
     /**
-     * Paged/limited variant used by the dashboard's recent-bills widget.
+     * Used by the dashboard for today's/yesterday's stats and the
+     * recent-bills widget (bounded to a single day's invoices for a shop).
      */
-    List<Invoice> findAllByShopIdAndStatusOrderByCreatedAtDesc(
-            UUID shopId, InvoiceStatus status, Pageable pageable);
-
     List<Invoice> findAllByShopIdAndStatusAndCreatedAtBetweenOrderByCreatedAtDesc(
             UUID shopId, InvoiceStatus status, Instant start, Instant end);
 

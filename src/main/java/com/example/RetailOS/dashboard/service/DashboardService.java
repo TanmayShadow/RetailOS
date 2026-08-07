@@ -89,8 +89,14 @@ public class DashboardService {
     public List<RecentBillResponse> getRecentBills(int limit) {
 
         UUID shopId = currentUserService.getCurrentShopId();
-        List<Invoice> invoices = invoiceRepository.findAllByShopIdAndStatusOrderByCreatedAtDesc(
-                shopId, InvoiceStatus.COMPLETED, PageRequest.of(0, clamp(limit, 1, 20)));
+
+        // Scoped to today, matching the widget's "Bills created today"
+        // subtitle -- completedInvoicesOn already orders desc by createdAt.
+        List<Invoice> invoices = completedInvoicesOn(
+                        shopId, LocalDate.now(ZoneId.systemDefault()), ZoneId.systemDefault())
+                .stream()
+                .limit(clamp(limit, 1, 20))
+                .toList();
 
         if (invoices.isEmpty()) {
             return List.of();

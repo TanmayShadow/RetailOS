@@ -51,8 +51,18 @@ public class Product extends BaseEntity {
     private BigDecimal sellingPrice;
 
     /**
-     * Maintained by the purchase/billing flows (DB triggers in the target
-     * schema) — never written from product create/update requests.
+     * Reference cost price shown next to selling price on the Products
+     * screen. Independent of purchase_items.purchasePrice, which records
+     * what was actually paid on each individual purchase transaction.
+     */
+    @Column(name = "purchase_price", nullable = false, precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal purchasePrice = BigDecimal.ZERO;
+
+    /**
+     * Settable once, as opening stock, when a product is created. After
+     * that it only moves through the purchase/billing flows — never a
+     * direct product update.
      */
     @Column(name = "current_stock", nullable = false, precision = 12, scale = 3)
     @Builder.Default

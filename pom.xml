@@ -107,6 +107,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Excel import/export for Products (.xlsx) -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.3.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

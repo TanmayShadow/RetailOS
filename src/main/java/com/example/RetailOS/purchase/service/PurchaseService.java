@@ -162,6 +162,9 @@ public class PurchaseService {
             createRequest.setSku(itemRequest.getSku());
             createRequest.setUnit(itemRequest.getUnit());
             createRequest.setSellingPrice(itemRequest.getSellingPrice());
+            // New products created inline from a purchase start out priced
+            // at what was just paid for them.
+            createRequest.setPurchasePrice(itemRequest.getPurchasePrice());
             createRequest.setCategoryId(itemRequest.getCategoryId());
             createRequest.setCategoryName(itemRequest.getCategoryName());
             return productService.create(createRequest);

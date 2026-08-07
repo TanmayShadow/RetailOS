@@ -19,6 +19,7 @@ public class ProductResponse {
     private String sku;
     private ProductUnit unit;
     private BigDecimal sellingPrice;
+    private BigDecimal purchasePrice;
     private BigDecimal currentStock;
     private BigDecimal minStock;
     private UUID categoryId;
@@ -33,6 +34,7 @@ public class ProductResponse {
                 .sku(product.getSku())
                 .unit(product.getUnit())
                 .sellingPrice(product.getSellingPrice())
+                .purchasePrice(product.getPurchasePrice())
                 .currentStock(product.getCurrentStock())
                 .minStock(product.getMinStock())
                 .categoryId(product.getCategoryId())
