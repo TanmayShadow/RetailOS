@@ -33,6 +33,20 @@ public class CreateProductRequest {
     @Digits(integer = 8, fraction = 2)
     private BigDecimal sellingPrice;
 
+    @NotNull
+    @DecimalMin(value = "0.00")
+    @Digits(integer = 8, fraction = 2)
+    private BigDecimal purchasePrice;
+
+    /**
+     * Opening stock — only settable here, at creation. After this the
+     * product's stock only moves through the purchase/billing flows.
+     * Optional — defaults to 0.
+     */
+    @DecimalMin(value = "0.00")
+    @Digits(integer = 9, fraction = 3)
+    private BigDecimal openingStock;
+
     /**
      * Low-stock alert threshold. Optional — defaults to 0 (no alert).
      */

@@ -62,6 +62,8 @@ public class ProductService {
                 .sku(sku)
                 .unit(request.getUnit() == null ? ProductUnit.PIECE : request.getUnit())
                 .sellingPrice(request.getSellingPrice())
+                .purchasePrice(request.getPurchasePrice() == null ? BigDecimal.ZERO : request.getPurchasePrice())
+                .currentStock(request.getOpeningStock() == null ? BigDecimal.ZERO : request.getOpeningStock())
                 .minStock(request.getMinStock() == null ? BigDecimal.ZERO : request.getMinStock())
                 .build();
 
@@ -116,6 +118,9 @@ public class ProductService {
         }
         if (request.getSellingPrice() != null) {
             product.setSellingPrice(request.getSellingPrice());
+        }
+        if (request.getPurchasePrice() != null) {
+            product.setPurchasePrice(request.getPurchasePrice());
         }
         if (request.getMinStock() != null) {
             product.setMinStock(request.getMinStock());
