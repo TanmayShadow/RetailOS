@@ -47,4 +47,13 @@ public class Invoice extends BaseEntity {
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
     @Builder.Default
     private BigDecimal totalAmount = BigDecimal.ZERO;
+
+    /**
+     * totalAmount already reflects the grand total (post-discount) — this
+     * exists purely so the subtotal/discount breakdown can be
+     * reconstructed later (invoice preview/reprint).
+     */
+    @Column(name = "discount_amount", nullable = false, precision = 12, scale = 2)
+    @Builder.Default
+    private BigDecimal discountAmount = BigDecimal.ZERO;
 }

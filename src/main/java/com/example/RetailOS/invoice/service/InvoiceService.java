@@ -2,9 +2,12 @@ package com.example.RetailOS.invoice.service;
 
 import com.example.RetailOS.customer.entity.Customer;
 import com.example.RetailOS.customer.repository.CustomerRepository;
+import com.example.RetailOS.customer.service.CustomerService;
+import com.example.RetailOS.invoice.dto.request.CheckoutRequest;
 import com.example.RetailOS.invoice.dto.request.CreateInvoiceRequest;
 import com.example.RetailOS.invoice.dto.request.InvoiceItemRequest;
 import com.example.RetailOS.invoice.dto.request.UpdateInvoiceRequest;
+import com.example.RetailOS.invoice.dto.response.CheckoutResponse;
 import com.example.RetailOS.invoice.dto.response.InvoiceItemResponse;
 import com.example.RetailOS.invoice.dto.response.InvoiceResponse;
 import com.example.RetailOS.invoice.entity.Invoice;
@@ -12,6 +15,9 @@ import com.example.RetailOS.invoice.entity.InvoiceItem;
 import com.example.RetailOS.invoice.entity.InvoiceStatus;
 import com.example.RetailOS.invoice.repository.InvoiceItemRepository;
 import com.example.RetailOS.invoice.repository.InvoiceRepository;
+import com.example.RetailOS.payment.dto.request.CreatePaymentRequest;
+import com.example.RetailOS.payment.entity.PaymentMode;
+import com.example.RetailOS.payment.service.PaymentService;
 import com.example.RetailOS.platform.exception.BadRequestException;
 import com.example.RetailOS.platform.exception.ResourceNotFoundException;
 import com.example.RetailOS.platform.security.service.CurrentUserService;
@@ -45,6 +51,8 @@ public class InvoiceService {
     private final InvoiceItemRepository invoiceItemRepository;
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
+    private final CustomerService customerService;
+    private final PaymentService paymentService;
     private final ShopRepository shopRepository;
     private final CurrentUserService currentUserService;
 
@@ -71,6 +79,73 @@ public class InvoiceService {
         invoice = invoiceRepository.save(invoice);
 
         return toDetailResponse(invoice, items);
+    }
+
+    /**
+     * The Billing screen's single "finalize sale" action: creates the
+     * invoice already COMPLETED, decrements stock, applies the discount,
+     * and (unless paying on credit) records full payment — all in one
+     * transaction. There's no draft/hold step in front of this; the
+     * cart lives in the browser until the cashier checks out.
+     */
+    @Transactional
+    public CheckoutResponse checkout(CheckoutRequest request) {
+
+        UUID shopId = currentUserService.getCurrentShopId();
+        UUID customerId = resolveCheckoutCustomerId(shopId, request);
+
+        Invoice invoice = invoiceRepository.save(Invoice.builder()
+                .shopId(shopId)
+                .customerId(customerId)
+                .invoiceNumber(generateInvoiceNumber(shopId))
+                .build());
+
+        List<InvoiceItem> items = buildItems(shopId, invoice.getId(), request.getItems());
+        invoiceItemRepository.saveAll(items);
+
+        BigDecimal subtotal = sumLineTotals(items);
+        BigDecimal discount = request.getDiscountAmount() == null
+                ? BigDecimal.ZERO : request.getDiscountAmount();
+        if (discount.compareTo(subtotal) > 0) {
+            throw new BadRequestException("Discount can't exceed the subtotal.");
+        }
+        BigDecimal grandTotal = subtotal.subtract(discount).setScale(2, RoundingMode.HALF_UP);
+
+        // Stock is decremented permissively here (no overselling block) —
+        // a shop may sell ahead of what the system shows in stock.
+        for (InvoiceItem item : items) {
+            productRepository.findById(item.getProductId()).ifPresent(product -> {
+                product.setCurrentStock(product.getCurrentStock().subtract(item.getQuantity()));
+                productRepository.save(product);
+            });
+        }
+
+        if (customerId != null) {
+            Customer customer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Customer not found: " + customerId));
+            customer.setCurrentBalance(customer.getCurrentBalance().add(grandTotal));
+            customerRepository.save(customer);
+        }
+
+        invoice.setDiscountAmount(discount);
+        invoice.setTotalAmount(grandTotal);
+        invoice.setStatus(InvoiceStatus.COMPLETED);
+        invoice = invoiceRepository.save(invoice);
+
+        if (request.getPaymentMode() != PaymentMode.CREDIT && grandTotal.signum() > 0) {
+            CreatePaymentRequest paymentRequest = new CreatePaymentRequest();
+            paymentRequest.setInvoiceId(invoice.getId());
+            paymentRequest.setCustomerId(customerId);
+            paymentRequest.setAmount(grandTotal);
+            paymentRequest.setPaymentMode(request.getPaymentMode());
+            paymentService.createPayment(paymentRequest);
+        }
+
+        return CheckoutResponse.builder()
+                .invoice(toDetailResponse(invoice, items))
+                .paymentMode(request.getPaymentMode())
+                .build();
     }
 
     /**
@@ -260,6 +335,26 @@ public class InvoiceService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Customer not found: " + customerId))
                 .getId();
+    }
+
+    /**
+     * An explicitly picked customer always wins. Otherwise, a credit sale
+     * needs a real customer to carry the balance — find-or-create one from
+     * the typed name/phone. Cash/UPI/Card walk-ins never get a customer
+     * record just from a typed name.
+     */
+    private UUID resolveCheckoutCustomerId(UUID shopId, CheckoutRequest request) {
+        if (request.getCustomerId() != null) {
+            return resolveCustomerId(shopId, request.getCustomerId());
+        }
+        if (request.getPaymentMode() == PaymentMode.CREDIT
+                && request.getCustomerName() != null
+                && !request.getCustomerName().isBlank()) {
+            return customerService
+                    .findOrCreateForCheckout(shopId, request.getCustomerName(), request.getCustomerPhone())
+                    .getId();
+        }
+        return null;
     }
 
     private Invoice requireInvoice(UUID id) {

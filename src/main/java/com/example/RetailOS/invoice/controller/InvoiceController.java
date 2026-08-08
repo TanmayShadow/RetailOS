@@ -1,7 +1,9 @@
 package com.example.RetailOS.invoice.controller;
 
+import com.example.RetailOS.invoice.dto.request.CheckoutRequest;
 import com.example.RetailOS.invoice.dto.request.CreateInvoiceRequest;
 import com.example.RetailOS.invoice.dto.request.UpdateInvoiceRequest;
+import com.example.RetailOS.invoice.dto.response.CheckoutResponse;
 import com.example.RetailOS.invoice.dto.response.InvoiceResponse;
 import com.example.RetailOS.invoice.entity.InvoiceStatus;
 import com.example.RetailOS.invoice.service.InvoiceService;
@@ -28,6 +30,14 @@ public class InvoiceController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(invoiceService.createInvoice(request));
+    }
+
+    @PostMapping("/checkout")
+    @PreAuthorize("hasAuthority('BILL_CREATE')")
+    public ResponseEntity<CheckoutResponse> checkout(@Valid @RequestBody CheckoutRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(invoiceService.checkout(request));
     }
 
     @GetMapping

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -87,6 +88,28 @@ public class CustomerService {
         }
 
         return CustomerResponse.from(customerRepository.save(customer));
+    }
+
+    /**
+     * Find-or-create by phone, used by checkout so a cashier can put a
+     * new customer on credit without a separate trip to the Customers
+     * screen first. Falls back to creating (phone may be blank — the
+     * customer just won't be findable by phone next time).
+     */
+    @Transactional
+    public Customer findOrCreateForCheckout(UUID shopId, String name, String phone) {
+        String normalizedPhone = normalizePhone(phone);
+        if (normalizedPhone != null) {
+            Optional<Customer> existing = customerRepository.findByShopIdAndPhone(shopId, normalizedPhone);
+            if (existing.isPresent()) {
+                return existing.get();
+            }
+        }
+        return customerRepository.save(Customer.builder()
+                .shopId(shopId)
+                .name(name.trim())
+                .phone(normalizedPhone)
+                .build());
     }
 
     /**
