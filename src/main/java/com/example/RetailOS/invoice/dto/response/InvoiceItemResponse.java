@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.UUID;
 
 @Getter
@@ -18,6 +19,8 @@ public class InvoiceItemResponse {
     private String productName;
     private ProductUnit unit;
     private BigDecimal quantity;
+    /** Per-unit price — back-derived from lineTotal/quantity for display (receipts, WhatsApp, print). */
+    private BigDecimal rate;
     private BigDecimal lineTotal;
 
     public static InvoiceItemResponse from(InvoiceItem item, Product product) {
@@ -27,6 +30,9 @@ public class InvoiceItemResponse {
                 .productName(product == null ? null : product.getName())
                 .unit(product == null ? null : product.getUnit())
                 .quantity(item.getQuantity())
+                .rate(item.getQuantity().signum() == 0
+                        ? BigDecimal.ZERO
+                        : item.getLineTotal().divide(item.getQuantity(), 2, RoundingMode.HALF_UP))
                 .lineTotal(item.getLineTotal())
                 .build();
     }
