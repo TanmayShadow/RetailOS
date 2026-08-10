@@ -32,6 +32,8 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
 
     Optional<Customer> findByIdAndShopId(UUID id, UUID shopId);
 
+    Optional<Customer> findByShopIdAndPhone(UUID shopId, String phone);
+
     boolean existsByShopIdAndPhone(UUID shopId, String phone);
 
     boolean existsByShopIdAndPhoneAndIdNot(UUID shopId, String phone, UUID id);

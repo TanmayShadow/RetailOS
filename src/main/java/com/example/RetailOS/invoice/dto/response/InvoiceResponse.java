@@ -20,6 +20,7 @@ public class InvoiceResponse {
     private String customerName;
     private InvoiceStatus status;
     private BigDecimal totalAmount;
+    private BigDecimal discountAmount;
     private UUID createdBy;
     private Instant createdAt;
 
@@ -37,6 +38,7 @@ public class InvoiceResponse {
                 .customerName(customerName)
                 .status(invoice.getStatus())
                 .totalAmount(invoice.getTotalAmount())
+                .discountAmount(invoice.getDiscountAmount())
                 .createdBy(invoice.getCreatedBy())
                 .createdAt(invoice.getCreatedAt())
                 .items(items)
