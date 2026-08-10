@@ -29,8 +29,16 @@ public class InvoiceResponse {
      */
     private List<InvoiceItemResponse> items;
 
+    /**
+     * Derived from the actual payment ledger (walk-in sales with no
+     * customer are always considered paid, since there's no credit
+     * account to track them against) — never stored, so it can't drift
+     * from what was actually collected.
+     */
+    private boolean paid;
+
     public static InvoiceResponse from(Invoice invoice, String customerName,
-                                       List<InvoiceItemResponse> items) {
+                                       List<InvoiceItemResponse> items, boolean paid) {
         return InvoiceResponse.builder()
                 .id(invoice.getId())
                 .invoiceNumber(invoice.getInvoiceNumber())
@@ -42,6 +50,7 @@ public class InvoiceResponse {
                 .createdBy(invoice.getCreatedBy())
                 .createdAt(invoice.getCreatedAt())
                 .items(items)
+                .paid(paid)
                 .build();
     }
 }

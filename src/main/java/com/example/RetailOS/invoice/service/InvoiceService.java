@@ -16,7 +16,9 @@ import com.example.RetailOS.invoice.entity.InvoiceStatus;
 import com.example.RetailOS.invoice.repository.InvoiceItemRepository;
 import com.example.RetailOS.invoice.repository.InvoiceRepository;
 import com.example.RetailOS.payment.dto.request.CreatePaymentRequest;
+import com.example.RetailOS.payment.entity.Payment;
 import com.example.RetailOS.payment.entity.PaymentMode;
+import com.example.RetailOS.payment.repository.PaymentRepository;
 import com.example.RetailOS.payment.service.PaymentService;
 import com.example.RetailOS.platform.exception.BadRequestException;
 import com.example.RetailOS.platform.exception.ResourceNotFoundException;
@@ -53,6 +55,7 @@ public class InvoiceService {
     private final CustomerRepository customerRepository;
     private final CustomerService customerService;
     private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
     private final ShopRepository shopRepository;
     private final CurrentUserService currentUserService;
 
@@ -193,8 +196,15 @@ public class InvoiceService {
         }
 
         Map<UUID, String> customerNames = customerNamesById(invoices);
+
+        Map<UUID, BigDecimal> paidByInvoice = paymentRepository
+                .findAllByInvoiceIdIn(invoices.stream().map(Invoice::getId).toList()).stream()
+                .collect(Collectors.groupingBy(Payment::getInvoiceId,
+                        Collectors.reducing(BigDecimal.ZERO, Payment::getAmount, BigDecimal::add)));
+
         return invoices.stream()
-                .map(i -> InvoiceResponse.from(i, customerNames.get(i.getCustomerId()), null))
+                .map(i -> InvoiceResponse.from(i, customerNames.get(i.getCustomerId()), null,
+                        isPaid(i, paidByInvoice.getOrDefault(i.getId(), BigDecimal.ZERO))))
                 .toList();
     }
 
@@ -388,11 +398,28 @@ public class InvoiceService {
                 : customerRepository.findById(invoice.getCustomerId())
                         .map(Customer::getName).orElse(null);
 
+        BigDecimal paidAmount = paymentRepository
+                .findAllByShopIdAndInvoiceIdOrderByPaymentDateDescCreatedAtDesc(invoice.getShopId(), invoice.getId())
+                .stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         return InvoiceResponse.from(invoice, customerName,
                 items.stream()
                         .map(i -> InvoiceItemResponse.from(i,
                                 i.getProductId() == null ? null : productsById.get(i.getProductId())))
-                        .toList());
+                        .toList(),
+                isPaid(invoice, paidAmount));
+    }
+
+    /**
+     * Walk-in sales (no customer) can't carry a credit balance, so they're
+     * always treated as paid; everything else is paid once the ledger
+     * shows payments covering the full total.
+     */
+    private boolean isPaid(Invoice invoice, BigDecimal paidAmount) {
+        return invoice.getCustomerId() == null
+                || paidAmount.compareTo(invoice.getTotalAmount()) >= 0;
     }
 
     private Map<UUID, String> customerNamesById(List<Invoice> invoices) {

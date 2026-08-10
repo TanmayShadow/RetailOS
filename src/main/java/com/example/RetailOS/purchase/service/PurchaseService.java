@@ -60,6 +60,8 @@ public class PurchaseService {
                 .supplierId(supplierId)
                 .purchaseDate(request.getPurchaseDate() == null
                         ? LocalDate.now() : request.getPurchaseDate())
+                .referenceNumber(request.getReferenceNumber() == null
+                        ? null : request.getReferenceNumber().trim())
                 .build());
 
         BigDecimal total = BigDecimal.ZERO;
@@ -103,8 +105,14 @@ public class PurchaseService {
                         shopId, supplierId);
 
         Map<UUID, String> supplierNames = supplierNamesById(purchases);
+
+        Map<UUID, Long> itemCounts = purchaseItemRepository
+                .findAllByPurchaseIdIn(purchases.stream().map(Purchase::getId).toList()).stream()
+                .collect(Collectors.groupingBy(PurchaseItem::getPurchaseId, Collectors.counting()));
+
         return purchases.stream()
-                .map(p -> PurchaseResponse.from(p, supplierNames.get(p.getSupplierId()), null))
+                .map(p -> PurchaseResponse.from(p, supplierNames.get(p.getSupplierId()), null,
+                        itemCounts.getOrDefault(p.getId(), 0L).intValue()))
                 .toList();
     }
 
@@ -217,7 +225,8 @@ public class PurchaseService {
         return PurchaseResponse.from(purchase, supplierName,
                 items.stream()
                         .map(i -> PurchaseItemResponse.from(i, productsById.get(i.getProductId())))
-                        .toList());
+                        .toList(),
+                items.size());
     }
 
     private Map<UUID, String> supplierNamesById(List<Purchase> purchases) {

@@ -35,6 +35,9 @@ public class Purchase extends BaseEntity {
     @Column(name = "purchase_date", nullable = false)
     private LocalDate purchaseDate;
 
+    @Column(name = "reference_number", length = 50)
+    private String referenceNumber;
+
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
     @Builder.Default
     private BigDecimal totalAmount = BigDecimal.ZERO;
