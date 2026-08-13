@@ -25,6 +25,8 @@ public class Shop extends BaseEntity {
     private String email;
     @Column(length = 15)
     private String gstIn;
+    @Column(length = 255)
+    private String address;
     @Column(length = 2048, name="logo_url")
     private String logoUrl;
     @Column(name = "invoice_prefix", nullable = false, length = 20)
@@ -36,4 +38,7 @@ public class Shop extends BaseEntity {
     private String whatsappNumber;
     @Column(name = "upi_id", length = 100)
     private String upiId;
+    @Column(name = "show_watermark", nullable = false)
+    @Builder.Default
+    private boolean showWatermark = true;
 }
