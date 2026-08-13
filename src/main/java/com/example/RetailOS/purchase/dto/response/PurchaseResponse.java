@@ -18,6 +18,7 @@ public class PurchaseResponse {
     private UUID supplierId;
     private String supplierName;
     private LocalDate purchaseDate;
+    private String referenceNumber;
     private BigDecimal totalAmount;
     private UUID createdBy;
     private Instant createdAt;
@@ -27,17 +28,26 @@ public class PurchaseResponse {
      */
     private List<PurchaseItemResponse> items;
 
+    /**
+     * Always populated, even in list responses where `items` itself is
+     * null — the Purchase History table needs a count without paying for
+     * every line item on every row.
+     */
+    private int itemCount;
+
     public static PurchaseResponse from(Purchase purchase, String supplierName,
-                                        List<PurchaseItemResponse> items) {
+                                        List<PurchaseItemResponse> items, int itemCount) {
         return PurchaseResponse.builder()
                 .id(purchase.getId())
                 .supplierId(purchase.getSupplierId())
                 .supplierName(supplierName)
                 .purchaseDate(purchase.getPurchaseDate())
+                .referenceNumber(purchase.getReferenceNumber())
                 .totalAmount(purchase.getTotalAmount())
                 .createdBy(purchase.getCreatedBy())
                 .createdAt(purchase.getCreatedAt())
                 .items(items)
+                .itemCount(itemCount)
                 .build();
     }
 }

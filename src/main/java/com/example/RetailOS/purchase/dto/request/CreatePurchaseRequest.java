@@ -29,6 +29,13 @@ public class CreatePurchaseRequest {
      */
     private LocalDate purchaseDate;
 
+    /**
+     * The supplier's own invoice/challan number, if given — a free-text
+     * lookup aid only.
+     */
+    @Size(max = 50)
+    private String referenceNumber;
+
     @NotEmpty
     @Valid
     private List<PurchaseItemRequest> items;

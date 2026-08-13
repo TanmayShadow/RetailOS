@@ -2,6 +2,7 @@ package com.example.RetailOS.customer.controller;
 
 import com.example.RetailOS.customer.dto.request.CreateCustomerRequest;
 import com.example.RetailOS.customer.dto.request.UpdateCustomerRequest;
+import com.example.RetailOS.customer.dto.response.CustomerPurchaseResponse;
 import com.example.RetailOS.customer.dto.response.CustomerResponse;
 import com.example.RetailOS.customer.service.CustomerService;
 import jakarta.validation.Valid;
@@ -32,6 +33,12 @@ public class CustomerController {
     @PreAuthorize("hasAuthority('CUSTOMER_VIEW')")
     public ResponseEntity<CustomerResponse> getCustomer(@PathVariable UUID id) {
         return ResponseEntity.ok(customerService.getCustomer(id));
+    }
+
+    @GetMapping("/{id}/purchases")
+    @PreAuthorize("hasAuthority('CUSTOMER_VIEW')")
+    public ResponseEntity<List<CustomerPurchaseResponse>> getCustomerPurchases(@PathVariable UUID id) {
+        return ResponseEntity.ok(customerService.getCustomerPurchases(id));
     }
 
     @PostMapping
