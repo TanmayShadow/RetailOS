@@ -27,6 +27,9 @@ public class CreateShopRequest {
     @Size(max = 15)
     private String gstIn;
 
+    @Size(max = 255)
+    private String address;
+
     @Size(max = 2048)
     private String logoUrl;
 

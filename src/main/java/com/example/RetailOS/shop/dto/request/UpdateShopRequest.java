@@ -21,6 +21,9 @@ public class UpdateShopRequest {
     @Size(max = 15)
     private String gstIn;
 
+    @Size(max = 255)
+    private String address;
+
     @Size(max = 2048)
     private String logoUrl;
 
@@ -35,4 +38,10 @@ public class UpdateShopRequest {
 
     @Size(max = 100)
     private String upiId;
+
+    /**
+     * Optional — only applied when explicitly provided, so PATCHes that
+     * don't touch branding don't accidentally flip it.
+     */
+    private Boolean showWatermark;
 }

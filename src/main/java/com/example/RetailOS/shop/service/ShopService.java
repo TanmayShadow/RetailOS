@@ -47,6 +47,7 @@ public class ShopService {
                 .phone(request.getPhone().trim())
                 .email(email)
                 .gstIn(request.getGstIn())
+                .address(request.getAddress())
                 .logoUrl(request.getLogoUrl())
                 .invoicePrefix(request.getInvoicePrefix() == null
                         ? "INV" : request.getInvoicePrefix().trim())
@@ -81,6 +82,9 @@ public class ShopService {
         if (request.getGstIn() != null) {
             shop.setGstIn(request.getGstIn().trim());
         }
+        if (request.getAddress() != null) {
+            shop.setAddress(request.getAddress().trim());
+        }
         if (request.getLogoUrl() != null) {
             shop.setLogoUrl(request.getLogoUrl().trim());
         }
@@ -95,6 +99,9 @@ public class ShopService {
         }
         if (request.getUpiId() != null) {
             shop.setUpiId(request.getUpiId().trim());
+        }
+        if (request.getShowWatermark() != null) {
+            shop.setShowWatermark(request.getShowWatermark());
         }
 
         return ShopResponse.from(shopRepository.save(shop));
